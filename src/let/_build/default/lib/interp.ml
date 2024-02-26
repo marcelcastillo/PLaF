@@ -11,11 +11,11 @@ let rec eval_expr : expr -> exp_val ea_result =
   | Var(id) ->
     apply_env id
   | Add(e1,e2) ->
-    eval_expr e1 >>=
-    int_of_numVal >>= fun n1 ->
-    eval_expr e2 >>=
-    int_of_numVal >>= fun n2 ->
-    return (NumVal (n1+n2))
+      eval_expr e1 >>=
+      int_of_numVal >>= fun n1 ->
+      eval_expr e2 >>=
+      int_of_numVal >>= fun n2 ->
+      return (NumVal (n1+n2))
   | Sub(e1,e2) ->
     eval_expr e1 >>=
     int_of_numVal >>= fun n1 ->
@@ -66,7 +66,66 @@ let rec eval_expr : expr -> exp_val ea_result =
     string_of_env >>= fun str ->
     print_endline str; 
     error "Debug called"
+
+  (* Binary Tree Aditions*)
+  | IsEmpty(e) -> 
+    eval_expr e >>=
+    tree_of_treeVal >>= fun t ->
+      return (BoolVal (t = Empty))
+
+  | EmptyTree(_t) ->
+    return (TreeVal Empty)
+
+  | Node(e1,e2,e3) ->
+    eval_expr e1 >>= fun ev1 ->
+    eval_expr e2 >>= 
+    tree_of_treeVal >>= fun ev2 ->
+    eval_expr e3 >>=
+    tree_of_treeVal >>= fun ev3 ->
+    return (TreeVal (Node(ev1, ev2, ev3)))
+
+  | CaseT(e1,e2,id1,id2,id3,e3) -> 
+    eval_expr e1 >>=
+    tree_of_treeVal >>= fun t ->
+    (match t with
+    | Empty -> eval_expr e2
+    | Node(v1,v2,v3) -> 
+      extend_env id1 v1 >>+
+      extend_env id2 (TreeVal(v2)) >>+
+      extend_env id3 (TreeVal(v3)) >>+
+      eval_expr e3)
+
+    (* Record Additions *)
+  | Record(fs) ->
+    (*Extract expressions from fs *)
+    let rec extract_expr lst =
+      match lst with
+      | [] -> []
+      | (_, (_, expr))::t -> expr::(extract_expr t) 
+    in
+    (* Evaluate the extracted expressions *)
+    eval_exprs (extract_expr fs) >>= fun vs ->
+      (* Combine evaluated values with the field names*)
+    let rec combine_fields_with_values fields values =
+      match fields, values with
+      | [], [] -> [] (*Both lists are empty *)
+      | (name, (_,_)) :: fs_tail, v::vs_tail -> (name, v)::combine_fields_with_values fs_tail vs_tail
+      | _, _ -> failwith "Lists fs and vs have different lengths"  (* Error handling for mismatched list lengths *)
+      in
+      return (RecordVal(combine_fields_with_values fs vs))
   | _ -> failwith "Not implemented yet!"
+
+
+and
+  eval_exprs : expr list -> (exp_val list) ea_result =
+  fun es ->
+  match es with
+  | [] -> return []
+  | h::t -> eval_expr h >>= fun i ->
+    eval_exprs t >>= fun l ->
+      return (i::l)
+
+
 
 (** [eval_prog e] evaluates program [e] *)
 let eval_prog (AProg(_,e)) =

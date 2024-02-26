@@ -2,16 +2,24 @@
 
 (* expressed values and environments are defined mutually recursively *)
 
+(* BinTree Change*)
+type 'a tree = Empty | Node of 'a * 'a tree * 'a tree
 
 type exp_val =
   | NumVal of int
   | BoolVal of bool
   | PairVal of exp_val*exp_val
   | TupleVal of exp_val list
+  | ListVal of exp_val list
+(* BinTree Change *)
+  | TreeVal of exp_val tree
+(* Records Change *)
+  | RecordVal of ( string * exp_val ) list
+
+
 type env =
   | EmptyEnv
   | ExtendEnv of string*exp_val*env
-
 
 (* Environment Abstracted Result *)
 
@@ -65,6 +73,10 @@ let empty_env : unit -> env ea_result = fun () ->
 let extend_env : string -> exp_val -> env ea_result = fun id v env ->
   Ok (ExtendEnv(id,v,env))
 
+(* BinTree Change *)
+let emptytree : unit -> exp_val  = fun () ->
+  TreeVal Empty
+
 let rec extend_env_list_helper =
   fun ids evs en ->
   match ids,evs with
@@ -106,13 +118,21 @@ let list_of_tupleVal : exp_val -> (exp_val list)  ea_result =  function
 let pair_of_pairVal : exp_val -> (exp_val*exp_val) ea_result =  function
   |  PairVal(ev1,ev2) -> return (ev1,ev2)
   | _ -> error "Expected a pair!"
-           
+
+  (* Binary Tree Assignment *)
+let tree_of_treeVal : exp_val -> (exp_val tree) ea_result = function
+    | TreeVal(t) -> return t
+    | _ -> error "Expected a tree!"
+
 let rec string_of_expval = function
   | NumVal n -> "NumVal " ^ string_of_int n
   | BoolVal b -> "BoolVal " ^ string_of_bool b
   | PairVal (ev1,ev2) -> "PairVal("^string_of_expval ev1
                          ^","^ string_of_expval ev2^")"
   | TupleVal evs -> "TupleVal("^String.concat "," (List.map string_of_expval evs)^")"
+
+  | ListVal _-> failwith "Not Implemented"
+  | TreeVal _ -> failwith "Not Implemented"
 
 let rec string_of_env' ac = function
   | EmptyEnv ->  "["^String.concat ",\n" ac^"]"
