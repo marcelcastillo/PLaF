@@ -106,13 +106,17 @@ let rec eval_expr : expr -> exp_val ea_result =
     (* Evaluate the extracted expressions *)
     eval_exprs (extract_expr fs) >>= fun vs ->
       (* Combine evaluated values with the field names*)
-    let rec combine_fields_with_values fields values =
+    let rec merge fields values = (* Pattern match on return values *)
       (match fields, values with
-      | [], [] -> [] (*Both lists are empty *)
-      | (name, (_,_)) :: fs_tail, v::vs_tail -> (name, v)::combine_fields_with_values fs_tail vs_tail
-      | _, _ -> return Error "Lists fs and vs have different lengths")(* Error handling for mismatched list lengths *)
+      | [], [] -> Ok [] (*Both lists are empty *)
+      | (name, (_,_)) :: fs_tail, v::vs_tail -> 
+          (match merge fs_tail vs_tail with
+          | Error s -> Error s
+          | Ok l -> Ok (name, v)::l)
+          | (* Match on OK of _____*)
+      | _, _ -> Error "Lists of diff length" )(* Error handling for mismatched list lengths *)
       in
-      return (RecordVal(combine_fields_with_values fs vs))
+      return (RecordVal(merge fs vs))
 
 
   | _ -> failwith "Not implemented yet!"

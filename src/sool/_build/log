@@ -1,0 +1,23 @@
+# dune ut
+# OCAMLPARAM: unset
+# Shared cache: disabled
+# Shared cache location: /home/ubuntu/.cache/dune/db
+# Workspace root: /home/ubuntu/Desktop/OCaml/PLaF/src/sool
+# Auto-detected concurrency: 8
+# Dune context:
+#  { name = "default"
+#  ; kind = "default"
+#  ; profile = Dev
+#  ; merlin = true
+#  ; fdo_target_exe = None
+#  ; build_dir = In_build_dir "default"
+#  ; installed_env =
+#      map
+#        { "INSIDE_DUNE" :
+#            "/home/ubuntu/Desktop/OCaml/PLaF/src/sool/_build/default"
+#        ; "OCAML_COLOR" : "always"
+#        ; "OPAMCOLOR" : "always"
+#        }
+#  ; instrument_with = []
+#  }
+$ /home/ubuntu/.opam/default/bin/ocamlc.opt -config > /tmp/dune_01dd0f_output
